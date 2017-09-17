@@ -25,7 +25,7 @@ export default class Carousel extends Component {
         itemHeight: PropTypes.number, // required for vertical carousel
         sliderWidth: PropTypes.number,  // required for horizontal carousel
         sliderHeight: PropTypes.number, // required for vertical carousel
-        activeSlideAlignment: PropTypes.oneOf(['center', 'end', 'start']),
+        activeSlideAlignment: PropTypes.oneOf(['center', 'end', 'start', 'stretched']),
         activeSlideOffset: PropTypes.number,
         apparitionDelay: PropTypes.number,
         autoplay: PropTypes.bool,
@@ -333,14 +333,43 @@ export default class Carousel extends Component {
         return `carousel-item-${index}`;
     }
 
-    _getItemLayout (data, index) {
-        const { itemWidth, itemHeight, vertical } = this.props;
+    _getItemLayout(data, index) {
+        const { activeSlideAlignment, itemWidth, itemHeight, vertical, sliderWidth } = this.props;
         const itemSize = vertical ? itemHeight : itemWidth;
 
+        const additionalBorderItemsOffset = (sliderWidth - itemWidth) / 2;
+
+        const isFirstItem = index === 0;
+        const isLastItem = index === this.props.data.length - 1;
+
+        if (activeSlideAlignment === 'stretched') {
+            if (isFirstItem) {
+                return {
+                    length: itemSize,
+                    offset: itemSize * index,
+                    index
+                }
+            }
+
+            if (isLastItem) {
+                return {
+                    length: itemSize,
+                    offset: itemSize * index - additionalBorderItemsOffset,
+                    index
+                }
+            }
+
+            return {
+                length: itemSize,
+                offset: itemSize * index - additionalBorderItemsOffset,
+                index
+            };
+        }
+
         return {
-            length: itemSize,
-            offset: itemSize * index,
-            index
+          length: itemSize,
+          offset: itemSize * index,
+          index
         };
     }
 
@@ -352,6 +381,10 @@ export default class Carousel extends Component {
 
     _getContainerInnerMargin (opposite = false) {
         const { sliderWidth, sliderHeight, itemWidth, itemHeight, vertical, activeSlideAlignment } = this.props;
+
+        if (activeSlideAlignment === 'stretched') {
+            return 0;
+        }
 
         if ((activeSlideAlignment === 'start' && !opposite) ||
             (activeSlideAlignment === 'end' && opposite)) {
@@ -367,7 +400,7 @@ export default class Carousel extends Component {
     _getViewportOffet () {
         const { sliderWidth, sliderHeight, itemWidth, itemHeight, vertical, activeSlideAlignment } = this.props;
 
-        if (activeSlideAlignment === 'start') {
+        if (activeSlideAlignment === 'start' || activeSlideAlignment === 'stretched') {
             return vertical ? itemHeight / 2 : itemWidth / 2;
         } else if (activeSlideAlignment === 'end') {
             return vertical ?
